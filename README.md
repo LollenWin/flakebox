@@ -1,2 +1,1 @@
-# flakebox
-An extended kernel for Windows.
+# FlakeBox R2
