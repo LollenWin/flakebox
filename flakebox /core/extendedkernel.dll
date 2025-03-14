@@ -1,0 +1,47 @@
+#include <windows.h>
+
+// Hooked function for GetVersionExA
+BOOL WINAPI New_GetVersionExA(LPOSVERSIONINFOA lpVersionInformation) {
+    BOOL result = GetVersionExA(lpVersionInformation);
+    lpVersionInformation->dwMajorVersion = 10;  // Trick apps into thinking it's Windows 10
+    lpVersionInformation->dwMinorVersion = 0;
+    lpVersionInformation->dwBuildNumber = 19041; 
+    return result;
+}
+
+// Hooked function for GetVersionExW
+BOOL WINAPI New_GetVersionExW(LPOSVERSIONINFOW lpVersionInformation) {
+    BOOL result = GetVersionExW(lpVersionInformation);
+    lpVersionInformation->dwMajorVersion = 10;
+    lpVersionInformation->dwMinorVersion = 0;
+    lpVersionInformation->dwBuildNumber = 19041;
+    return result;
+}
+
+// Hooked function for IsWow64Process (fixes compatibility issues on older Windows)
+BOOL WINAPI New_IsWow64Process(HANDLE hProcess, PBOOL Wow64Process) {
+    if (Wow64Process) *Wow64Process = FALSE;  // Pretend the system is 64-bit safe
+    return TRUE;
+}
+
+// Hooked function for OpenProcessToken (adds missing API)
+BOOL WINAPI New_OpenProcessToken(HANDLE ProcessHandle, DWORD DesiredAccess, PHANDLE TokenHandle) {
+    return OpenProcessToken(ProcessHandle, DesiredAccess, TokenHandle);
+}
+
+// Hooked function for GetTickCount64 (XP/Vista lack this API)
+ULONGLONG WINAPI New_GetTickCount64() {
+    return (ULONGLONG)GetTickCount();
+}
+
+// DLL Entry Point
+BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved) {
+    switch (ul_reason_for_call) {
+    case DLL_PROCESS_ATTACH:
+        DisableThreadLibraryCalls(hModule);
+        break;
+    case DLL_PROCESS_DETACH:
+        break;
+    }
+    return TRUE;
+}
